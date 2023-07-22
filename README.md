@@ -1,2 +1,2 @@
 # interpreter_tb
-用Go语言自制编译器
+用 Go 语言自制编译器
