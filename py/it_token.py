@@ -22,7 +22,6 @@ class TokenType:
     OP_LTE = "<="
     OP_GT = ">"
     OP_GTE = ">="
-
     # 分隔符
     COMMA = ","
     SEMICOLON = ";"
@@ -54,7 +53,7 @@ class Token:
         return s
     def __repr__(self) -> str:
         if len(self.literal) > 0:
-            return self.literal
+            return '`' + self.literal + '`'
         else:
             return self.tokenType
 
@@ -62,6 +61,11 @@ class Token:
 KeywordMap:Dict[str, Token] = {
     TokenType.KW_FUNC:Token(TokenType.KW_FUNC),
     TokenType.KW_LET:Token(TokenType.KW_LET),
+    TokenType.KW_IF:Token(TokenType.KW_IF),
+    TokenType.KW_ELSE:Token(TokenType.KW_ELSE),
+    TokenType.KW_RETURN:Token(TokenType.KW_RETURN),
+    TokenType.KW_TRUE:Token(TokenType.KW_TRUE),
+    TokenType.KW_FALSE:Token(TokenType.KW_FALSE),
 }
 
 if __name__ == "__main__":

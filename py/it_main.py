@@ -1,6 +1,5 @@
 import sys
 import io
-import it_token
 import it_tokenizer
 
 def REPL()->None:

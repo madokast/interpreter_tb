@@ -37,20 +37,24 @@ class SourceReader:
 
     def __init__(self, input:io.IOBase) -> None:
         self.input = input
-        self.unreadBuf = Queue()
+        self.unreadBuf:Queue[tokenizer.char] = Queue()
     def read(self) -> tokenizer.char:
         if self.unreadBuf.empty():
             b = self.input.readline(1) # 读一个字符，读不到返回空
             return b.decode("ascii")
         else:
             return self.unreadBuf.get() # dequeue
-    def readSkipWhitespace(self) -> tokenizer.char:
+    def readSkipWhitespace(self) -> tokenizer.char: # 读跳过空白
         c = self.read()
         while tokenizer.isWhitespace(c):
             c = self.read()
         return c
-    def unread(self, c:tokenizer.char)->None:
+    def unread(self, c:tokenizer.char)->None: # 读多了写回
         self.unreadBuf.put(c) # inqueue
+    def top(self)->tokenizer.char: # 查看
+        c = self.read()
+        self.unread(c)
+        return c
     def readWord(self, fisrt:tokenizer.char)->str:
         word = str(fisrt)
         while True:
@@ -68,7 +72,7 @@ class SourceReader:
                 interger += str(c)
             else:
                 self.unread(c)
-                return interger
+                return str(int(interger))
 
 class Tokenizer:
     '''
@@ -80,11 +84,10 @@ class Tokenizer:
         # swith-case
         c = self.sr.readSkipWhitespace()
         if c == TokenType.OP_ASSIGN: # =, ==
-            n = self.sr.read() # 再读一个
+            n = self.sr.top() # 查看下一个，不读出来
             if n == TokenType.OP_ASSIGN:
                 return Token(TokenType.OP_EQ)
             else:
-                self.sr.unread(n) # 回读
                 return Token(TokenType.OP_ASSIGN)
         elif c == TokenType.OP_PLUS: # +
             return Token(TokenType.OP_PLUS)
@@ -95,25 +98,22 @@ class Tokenizer:
         elif c == TokenType.OP_SLASH: # /
             return Token(TokenType.OP_SLASH)
         elif c == TokenType.OP_BANG: # !, !=
-            n = self.sr.read()
+            n = self.sr.top()
             if n == TokenType.OP_ASSIGN:
                 return Token(TokenType.OP_NEQ)
             else:
-                self.sr.unread(n)
                 return Token(TokenType.OP_BANG)
         elif c == TokenType.OP_LT: # <, <=
-            n = self.sr.read()
+            n = self.sr.top()
             if n == TokenType.OP_ASSIGN:
                 return Token(TokenType.OP_LTE)
             else:
-                self.sr.unread(n)
                 return Token(TokenType.OP_LT)
         elif c == TokenType.OP_GT: # >, >=
-            n = self.sr.read()
+            n = self.sr.top()
             if n == TokenType.OP_ASSIGN:
                 return Token(TokenType.OP_GTE)
             else:
-                self.sr.unread(n)
                 return Token(TokenType.OP_GT)
         elif c == TokenType.COMMA: # ,
             return Token(TokenType.COMMA)
