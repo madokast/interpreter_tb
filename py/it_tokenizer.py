@@ -1,4 +1,4 @@
-from it_token import TokenType, Token, KeywordMap
+from it_token import TokenType, TokenTypes, Token, KeywordMap
 import io
 from queue import Queue
 from typing import Dict, List
@@ -25,7 +25,7 @@ class tokenizer:
         while True:
             t = tk.nextToken()
             tokens.append(t)
-            if t.tokenType == TokenType.EOF or t.tokenType == TokenType.ILLEGAL:
+            if t.tokenType == TokenTypes.EOF or t.tokenType == TokenTypes.ILLEGAL:
                 return tokens
 
 class SourceReader:
@@ -51,7 +51,7 @@ class SourceReader:
         return c
     def unread(self, c:tokenizer.char)->None: # 读多了写回
         self.unreadBuf.put(c) # inqueue
-    def top(self)->tokenizer.char: # 查看
+    def top(self)->tokenizer.char: # 查看下一个字符，但是不读出
         c = self.read()
         self.unread(c)
         return c
@@ -83,66 +83,66 @@ class Tokenizer:
     def nextToken(self) -> Token:
         # swith-case
         c = self.sr.readSkipWhitespace()
-        if c == TokenType.OP_ASSIGN: # =, ==
+        if c == TokenTypes.OP_ASSIGN: # =, ==
             n = self.sr.top() # 查看下一个，不读出来
-            if n == TokenType.OP_ASSIGN:
-                return Token(TokenType.OP_EQ)
+            if n == TokenTypes.OP_ASSIGN:
+                return Token(TokenTypes.OP_EQ)
             else:
-                return Token(TokenType.OP_ASSIGN)
-        elif c == TokenType.OP_PLUS: # +
-            return Token(TokenType.OP_PLUS)
-        elif c == TokenType.OP_MINUS: # -
-            return Token(TokenType.OP_MINUS)
-        elif c == TokenType.OP_ASTERISK: # *
-            return Token(TokenType.OP_ASTERISK)
-        elif c == TokenType.OP_SLASH: # /
-            return Token(TokenType.OP_SLASH)
-        elif c == TokenType.OP_BANG: # !, !=
+                return Token(TokenTypes.OP_ASSIGN)
+        elif c == TokenTypes.OP_PLUS: # +
+            return Token(TokenTypes.OP_PLUS)
+        elif c == TokenTypes.OP_MINUS: # -
+            return Token(TokenTypes.OP_MINUS)
+        elif c == TokenTypes.OP_ASTERISK: # *
+            return Token(TokenTypes.OP_ASTERISK)
+        elif c == TokenTypes.OP_SLASH: # /
+            return Token(TokenTypes.OP_SLASH)
+        elif c == TokenTypes.OP_BANG: # !, !=
             n = self.sr.top()
-            if n == TokenType.OP_ASSIGN:
-                return Token(TokenType.OP_NEQ)
+            if n == TokenTypes.OP_ASSIGN:
+                return Token(TokenTypes.OP_NEQ)
             else:
-                return Token(TokenType.OP_BANG)
-        elif c == TokenType.OP_LT: # <, <=
+                return Token(TokenTypes.OP_BANG)
+        elif c == TokenTypes.OP_LT: # <, <=
             n = self.sr.top()
-            if n == TokenType.OP_ASSIGN:
-                return Token(TokenType.OP_LTE)
+            if n == TokenTypes.OP_ASSIGN:
+                return Token(TokenTypes.OP_LTE)
             else:
-                return Token(TokenType.OP_LT)
-        elif c == TokenType.OP_GT: # >, >=
+                return Token(TokenTypes.OP_LT)
+        elif c == TokenTypes.OP_GT: # >, >=
             n = self.sr.top()
-            if n == TokenType.OP_ASSIGN:
-                return Token(TokenType.OP_GTE)
+            if n == TokenTypes.OP_ASSIGN:
+                return Token(TokenTypes.OP_GTE)
             else:
-                return Token(TokenType.OP_GT)
-        elif c == TokenType.COMMA: # ,
-            return Token(TokenType.COMMA)
-        elif c == TokenType.SEMICOLON: # ;
-            return Token(TokenType.SEMICOLON)
-        elif c == TokenType.L_PAREN: # (
-            return Token(TokenType.L_PAREN)
-        elif c == TokenType.R_PAREN: # )
-            return Token(TokenType.R_PAREN)
-        elif c == TokenType.L_BRACE: # {
-            return Token(TokenType.L_BRACE)
-        elif c == TokenType.R_BRACE: # }
-            return Token(TokenType.R_BRACE)
+                return Token(TokenTypes.OP_GT)
+        elif c == TokenTypes.COMMA: # ,
+            return Token(TokenTypes.COMMA)
+        elif c == TokenTypes.SEMICOLON: # ;
+            return Token(TokenTypes.SEMICOLON)
+        elif c == TokenTypes.L_PAREN: # (
+            return Token(TokenTypes.L_PAREN)
+        elif c == TokenTypes.R_PAREN: # )
+            return Token(TokenTypes.R_PAREN)
+        elif c == TokenTypes.L_BRACE: # {
+            return Token(TokenTypes.L_BRACE)
+        elif c == TokenTypes.R_BRACE: # }
+            return Token(TokenTypes.R_BRACE)
         elif c == tokenizer.EOF: # ,
-            return Token(TokenType.EOF)
+            return Token(TokenTypes.EOF)
         else:
             if tokenizer.isLetter(c): # 处理单词
                 word = self.sr.readWord(c)
                 # 区分关键字和标识符
                 keywordToken = KeywordMap.get(word)
                 if keywordToken is None:
-                    return Token(TokenType.IDENTIFIER, word)
+                    return Token(TokenTypes.IDENTIFIER, word)
                 else:
                     return keywordToken
             elif tokenizer.isDigit(c): # 处理数字
                 integer = self.sr.readInteger(c)
-                return Token(TokenType.INTEGER, integer)
+                return Token(TokenTypes.INTEGER, integer)
         
-        return Token(TokenType.ILLEGAL)
+        return Token(TokenTypes.ILLEGAL)
 
 
 
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     while True:
         t = tz.nextToken()
         print(t)
-        if t.tokenType == TokenType.EOF:
+        if t.tokenType == TokenTypes.EOF:
             break
 
     print("===")
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     while True:
         t = tz.nextToken()
         tokens.append(t.__repr__())
-        if t.tokenType == TokenType.EOF:
+        if t.tokenType == TokenTypes.EOF:
             break
     print(" ".join(tokens))
 
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     while True:
         t = tz.nextToken()
         tokens.append(t.__repr__())
-        if t.tokenType == TokenType.EOF:
+        if t.tokenType == TokenTypes.EOF:
             break
     print(" ".join(tokens))
 

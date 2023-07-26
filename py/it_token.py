@@ -1,51 +1,58 @@
 from typing import Dict
 
-class TokenType:
+class TokenType(str):
+    pass
+
+class TokenTypes:
     '''
      词法单元 token 的类型，枚举类
     '''
-    ILLEGAL = "ILLEGAL" # 非法类型
-    EOF  = "EOF" # 结束标记
+    ILLEGAL = TokenType("ILLEGAL") # 非法类型
+    EOF  = TokenType("EOF") # 结束标记
     # 标识符
-    IDENTIFIER = "ID"
-    INTEGER = "INT"
+    IDENTIFIER = TokenType("ID")
+    INTEGER = TokenType("INT")
     # 运算符
-    OP_ASSIGN = "="
-    OP_PLUS = "+"
-    OP_MINUS = "-"
-    OP_ASTERISK = "*"
-    OP_SLASH = "/"
-    OP_BANG = "!"
-    OP_EQ = "=="
-    OP_NEQ = "!="
-    OP_LT = "<"
-    OP_LTE = "<="
-    OP_GT = ">"
-    OP_GTE = ">="
+    OP_ASSIGN = TokenType("=")
+    OP_PLUS = TokenType("+")
+    OP_MINUS = TokenType("-")
+    OP_ASTERISK = TokenType("*")
+    OP_SLASH = TokenType("/")
+    OP_BANG = TokenType("!")
+    OP_EQ = TokenType("==")
+    OP_NEQ = TokenType("!=")
+    OP_LT = TokenType("<")
+    OP_LTE = TokenType("<=")
+    OP_GT = TokenType(">")
+    OP_GTE = TokenType(">=")
     # 分隔符
-    COMMA = ","
-    SEMICOLON = ";"
+    COMMA = TokenType(",")
+    SEMICOLON = TokenType(";")
     # 括号
-    L_PAREN = "("
-    R_PAREN = ")"
-    L_BRACE = "{"
-    R_BRACE = "}"
+    L_PAREN = TokenType("(")
+    R_PAREN = TokenType(")")
+    L_BRACE = TokenType("{")
+    R_BRACE = TokenType("}")
     # 关键字
-    KW_FUNC = "fn"
-    KW_LET = "let"
-    KW_IF = "if"
-    KW_ELSE = "else"
-    KW_RETURN = "return"
-    KW_TRUE = "true"
-    KW_FALSE = "false"
+    KW_FUNC = TokenType("fn")
+    KW_LET = TokenType("let")
+    KW_IF = TokenType("if")
+    KW_ELSE = TokenType("else")
+    KW_RETURN = TokenType("return")
+    KW_TRUE = TokenType("true")
+    KW_FALSE = TokenType("false")
 
 class Token:
     '''
     词法单元：词法类型 TokenType + 字面量 literal
     '''
-    def __init__(self, tokenType:str, literal:str = "") -> None:
+    def __init__(self, tokenType:TokenType, literal:str = "") -> None:
         self.tokenType = tokenType
         self.literal = literal
+    def checkTokenType(self, tokenType:TokenType)->'Token':
+        if self.tokenType != tokenType:
+            raise Exception(f"token type {self.tokenType} is not {tokenType}")
+        return self
     def __str__(self) -> str:
         s = self.tokenType
         if len(self.literal) > 0:
@@ -59,24 +66,24 @@ class Token:
 
 
 KeywordMap:Dict[str, Token] = {
-    TokenType.KW_FUNC:Token(TokenType.KW_FUNC),
-    TokenType.KW_LET:Token(TokenType.KW_LET),
-    TokenType.KW_IF:Token(TokenType.KW_IF),
-    TokenType.KW_ELSE:Token(TokenType.KW_ELSE),
-    TokenType.KW_RETURN:Token(TokenType.KW_RETURN),
-    TokenType.KW_TRUE:Token(TokenType.KW_TRUE),
-    TokenType.KW_FALSE:Token(TokenType.KW_FALSE),
+    TokenTypes.KW_FUNC:Token(TokenTypes.KW_FUNC),
+    TokenTypes.KW_LET:Token(TokenTypes.KW_LET),
+    TokenTypes.KW_IF:Token(TokenTypes.KW_IF),
+    TokenTypes.KW_ELSE:Token(TokenTypes.KW_ELSE),
+    TokenTypes.KW_RETURN:Token(TokenTypes.KW_RETURN),
+    TokenTypes.KW_TRUE:Token(TokenTypes.KW_TRUE),
+    TokenTypes.KW_FALSE:Token(TokenTypes.KW_FALSE),
 }
 
 if __name__ == "__main__":
     tokens = [
-        Token(TokenType.IDENTIFIER, "a"),
-        Token(TokenType.OP_ASSIGN),
-        Token(TokenType.INTEGER, "10"),
-        Token(TokenType.OP_PLUS),
-        Token(TokenType.INTEGER, "20"),
-        Token(TokenType.SEMICOLON),
-        Token(TokenType.EOF)
+        Token(TokenTypes.IDENTIFIER, "a"),
+        Token(TokenTypes.OP_ASSIGN),
+        Token(TokenTypes.INTEGER, "10"),
+        Token(TokenTypes.OP_PLUS),
+        Token(TokenTypes.INTEGER, "20"),
+        Token(TokenTypes.SEMICOLON),
+        Token(TokenTypes.EOF)
     ]
     for t in tokens:
         print(t)
