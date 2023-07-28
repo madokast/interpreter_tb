@@ -11,6 +11,8 @@ EmptyStatement 空语句，单个分号
 ExpressionStatement 表达式语句。"x+10;" 是一个合法的语句
 
 Expression 表达式节点 表达式类型 ExpressionType 及其枚举 ExpressionTypes
+PrefixExpression 前缀表达式，有前缀运算符加上表达式组成
+BinaryOperatorExpression 二元运算表达式，由左右表达式和二元运算符组成
 IdentifierNode 标识符节点，表达式的一种，但是也可以当作左值
 IntegerLiteral 整数字面量
 '''
