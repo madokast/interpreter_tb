@@ -86,6 +86,7 @@ class Tokenizer:
         if c == TokenTypes.OP_ASSIGN: # =, ==
             n = self.sr.top() # 查看下一个，不读出来
             if n == TokenTypes.OP_ASSIGN:
+                self.sr.read()
                 return Token(TokenTypes.OP_EQ)
             else:
                 return Token(TokenTypes.OP_ASSIGN)
@@ -100,18 +101,21 @@ class Tokenizer:
         elif c == TokenTypes.OP_BANG: # !, !=
             n = self.sr.top()
             if n == TokenTypes.OP_ASSIGN:
+                self.sr.read()
                 return Token(TokenTypes.OP_NEQ)
             else:
                 return Token(TokenTypes.OP_BANG)
         elif c == TokenTypes.OP_LT: # <, <=
             n = self.sr.top()
             if n == TokenTypes.OP_ASSIGN:
+                self.sr.read()
                 return Token(TokenTypes.OP_LTE)
             else:
                 return Token(TokenTypes.OP_LT)
         elif c == TokenTypes.OP_GT: # >, >=
             n = self.sr.top()
             if n == TokenTypes.OP_ASSIGN:
+                self.sr.read()
                 return Token(TokenTypes.OP_GTE)
             else:
                 return Token(TokenTypes.OP_GT)

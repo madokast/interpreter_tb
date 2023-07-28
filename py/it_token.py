@@ -5,7 +5,7 @@ class TokenType(str):
 
 class TokenTypes:
     '''
-     词法单元 token 的类型，枚举类
+    词法单元 token 的类型，枚举类
     '''
     ILLEGAL = TokenType("ILLEGAL") # 非法类型
     EOF  = TokenType("EOF") # 结束标记
@@ -51,7 +51,7 @@ class Token:
         self.literal = literal
     def checkTokenType(self, tokenType:TokenType)->'Token':
         if self.tokenType != tokenType:
-            raise Exception(f"token type {self.tokenType} is not {tokenType}")
+            raise Exception(f"type of token {self} is not {tokenType}")
         return self
     def __str__(self) -> str:
         s = self.tokenType
