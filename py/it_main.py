@@ -1,6 +1,7 @@
 import sys
 import io
 import it_tokenizer
+import it_parser
 
 def REPL()->None:
     while True:
@@ -15,6 +16,9 @@ def REPL()->None:
         ts = it_tokenizer.tokenizer.tokenize(io.BytesIO(s.encode("ascii")))
         print("\n".join((str(t) for t in ts)))
         print(" ".join((t.__repr__() for t in ts)))
+        pg = it_parser.parser.parse(io.BytesIO(s.encode("ascii")))
+        print("AST", pg)
+
 
 if __name__ == "__main__":
     argv = sys.argv

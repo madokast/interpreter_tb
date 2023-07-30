@@ -38,6 +38,7 @@ class TokenTypes:
     KW_LET = TokenType("let")
     KW_IF = TokenType("if")
     KW_ELSE = TokenType("else")
+    KW_WHILE = TokenType("while")
     KW_RETURN = TokenType("return")
     KW_TRUE = TokenType("true")
     KW_FALSE = TokenType("false")
@@ -60,7 +61,7 @@ class Token:
         return s
     def __repr__(self) -> str:
         if len(self.literal) > 0:
-            return '`' + self.literal + '`'
+            return self.literal
         else:
             return self.tokenType
 
@@ -70,6 +71,7 @@ KeywordMap:Dict[str, Token] = {
     TokenTypes.KW_LET:Token(TokenTypes.KW_LET),
     TokenTypes.KW_IF:Token(TokenTypes.KW_IF),
     TokenTypes.KW_ELSE:Token(TokenTypes.KW_ELSE),
+    TokenTypes.KW_WHILE:Token(TokenTypes.KW_WHILE),
     TokenTypes.KW_RETURN:Token(TokenTypes.KW_RETURN),
     TokenTypes.KW_TRUE:Token(TokenTypes.KW_TRUE),
     TokenTypes.KW_FALSE:Token(TokenTypes.KW_FALSE),

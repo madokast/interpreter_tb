@@ -2,13 +2,18 @@
 AST 抽象语法树数据结构
 Node 是所有的节点抽象
 
-Program 程序根节点，由若干个表达式 Statement 组成
+Block 代码块，由若干个表达式 Statement 组成
+Program 程序根节点，即一个代码块
 
 Statement 语句节点 语句类型 StatementType 及其枚举 StatementTypes
+AssignStatement 赋值语句
 LetStatement LET-语句
 ReturnStatement RETURN-语句
+IfStatement IF-语句 if (expt) {block} [else {block}]
+WhileStatement WHILE-语句 while (expt) {block}
 EmptyStatement 空语句，单个分号
 ExpressionStatement 表达式语句。"x+10;" 是一个合法的语句
+
 
 Expression 表达式节点 表达式类型 ExpressionType 及其枚举 ExpressionTypes
 PrefixExpression 前缀表达式，前缀运算符加上表达式组成
@@ -16,9 +21,11 @@ BinaryOperatorExpression 二元运算表达式，由左右表达式和二元运�
 IdentifierNode 标识符节点，表达式的一种，但是也可以当作左值
 BoolLiteral 布尔字面量
 IntegerLiteral 整数字面量
+FuncLiteral 函数字面量 fn(Identifier...){block}
+FuncCaller 函数调用，包括普通的 id(expr...) 和立即函数 FuncLiteral(expr...)
 '''
 from it_token import Token, TokenTypes, TokenType
-from typing import List
+from typing import List, Union
 import functools
 
 class Node:
@@ -28,7 +35,7 @@ class Node:
     def tokens(self)->List[Token]:
         raise NotImplemented
     def __str__(self) -> str:
-        return str(self.tokens())
+        return " ".join((t.__repr__() for t in self.tokens()))
     def __repr__(self) -> str:
         return str(self)
 
@@ -43,9 +50,13 @@ class StatementTypes:
     语句类型枚举
     '''
     EMPTY = StatementType("EMPTY")
+    ASSIGN = StatementType("ASSIGN")
     LET = StatementType("LET")
     RETURN = StatementType("RETURN")
     EXPRESSION = StatementType("EXPRESSION")
+    IF = StatementType("IF")
+    WHILE = StatementType("WHILE")
+    BLOCK = StatementType("BLOCK")
 
 class Statement(Node):
     '''
@@ -80,10 +91,12 @@ class ExpressionTypes:
     表达式类型枚举
     '''
     IDENTIFIER = ExpressionType("IDENTIFIER") # 标识符表达式
-    INTEGER_LITERAL = ExpressionType("LITERAL") # 字面量表达式
-    BOOL_LITERAL = ExpressionType("LITERAL") # 字面量表达式
+    INTEGER_LITERAL = ExpressionType("INTEGER_LITERAL") # 字面量表达式
+    BOOL_LITERAL = ExpressionType("BOOL_LITERAL") # 字面量表达式
+    FUNC_LITERAL = ExpressionType("FUNC_LITERAL") # 函数字面量表达式
     PREFIX = ExpressionType("PREFIX") # 前缀表达式
     BINARY = ExpressionType("BINARY") # 二元运算表达式
+    FUNC_CALLER = ExpressionType("FUNC_CALLER") # 函数调用表达式
 
 class Expression(Node):
     '''
@@ -92,19 +105,32 @@ class Expression(Node):
     def expressionType(self)->ExpressionType:
         raise NotImplemented
 
-class Program(Node):
+class Block(Statement):
     '''
-    程序，AST 的根节点，由多个 statement 组成
+    代码块
     '''
     def __init__(self) -> None:
         super().__init__()
         self._statements:List[Statement] = []
+    def statementType(self)->StatementType:
+        return StatementTypes.BLOCK
     def addStatement(self, s:Statement)->None:
         self._statements.append(s)
     def statements(self)->List[Statement]:
         return self._statements
     def tokens(self)->List[Token]:
-        return functools.reduce(lambda a,b:a+b, (s.tokens() for s in self.statements()))
+        return [Token(TokenTypes.L_BRACE)] + functools.reduce(lambda a,b:a+b, (s.tokens() for s in self.statements()),[]) + [Token(TokenTypes.R_BRACE)]
+
+class Program(Block):
+    '''
+    程序，AST 的根节点，就是一个代码块
+    '''
+    def __init__(self, block:Block) -> None:
+        super().__init__()
+        self._statements.extend(block.statements())
+    def tokens(self)->List[Token]:
+        return functools.reduce(lambda a,b:a+b, (s.tokens() for s in self.statements()),[])
+
 
 class PrefixExpression(Expression):
     '''
@@ -167,6 +193,53 @@ class BoolLiteral(Expression):
         return ExpressionTypes.BOOL_LITERAL
     def tokens(self)->List[Token]:
         return [self.token]
+    
+class FuncLiteral(Expression):
+    '''
+    函数字面量
+    '''
+    def __init__(self, identifiers:List[IdentifierNode], body:Block) -> None:
+        super().__init__()
+        self._parameters = identifiers
+        self._body = body
+    def expressionType(self)->ExpressionType:
+        return ExpressionTypes.FUNC_LITERAL
+    def parameters(self)->List[IdentifierNode]:
+        return self._parameters
+    def body(self)->Block:
+        return self._body
+    def tokens(self)->List[Token]:
+        ts = [Token(TokenTypes.KW_FUNC), Token(TokenTypes.L_PAREN)] # fn(
+        [ts.extend(id.tokens() + [Token(TokenTypes.COMMA)]) for id in self.parameters()] if len(self.parameters()) > 0 else None
+        ts.pop() if len(self.parameters()) > 0 else None
+        ts.append(Token(TokenTypes.R_PAREN)) # )
+        ts.extend(self.body().tokens()) # block
+        return ts
+
+
+class FuncCaller(Expression):
+    '''
+    函数调用
+    分为 IdentifierNode(expr...) 和 FuncLiteral(expr...) 两种
+    '''
+    def __init__(self, callee:Union[IdentifierNode, FuncLiteral], arguments:List[Expression]) -> None:
+        super().__init__()
+        self._callee = callee
+        self._arguments = arguments
+    def callee(self)->Union[IdentifierNode, FuncLiteral]:
+        return self._callee
+    def arguments(self)->List[Expression]:
+        return self._arguments
+    def expressionType(self)->ExpressionType:
+        return ExpressionTypes.FUNC_CALLER
+    def tokens(self)->List[Token]:
+        ts = self.callee().tokens()
+        ts.append(Token(TokenTypes.L_PAREN)) # (
+        [ts.extend(a.tokens() + [Token(TokenTypes.COMMA)]) for a in self.arguments()] if len(self.arguments()) > 0 else None
+        ts.pop() if len(self.arguments()) > 0 else None
+        ts.append(Token(TokenTypes.R_PAREN)) # )
+        return ts
+
 
 class BinaryOperatorExpression(Expression):
     '''
@@ -216,6 +289,26 @@ class ExpressionStatement(Statement):
             expr = expr[1:-1]
         return expr + [Token(TokenTypes.SEMICOLON)]
 
+class AssignStatement(Statement):
+    '''
+    赋值语句
+    '''
+    def __init__(self, identifier:IdentifierNode, expression:Expression) -> None:
+        super().__init__()
+        self._identifier = identifier
+        self._expression = expression
+    def statementType(self)->StatementType:
+        return StatementTypes.ASSIGN
+    def identifier(self)->IdentifierNode:
+        return self._identifier
+    def expression(self)->Expression:
+        return self._expression
+    def tokens(self)->List[Token]: # id = (expr);
+        expr = self._expression.tokens()
+        if expr[0].tokenType == TokenTypes.L_PAREN and expr[-1].tokenType == TokenTypes.R_PAREN:
+            expr = expr[1:-1]
+        return self._identifier.tokens() + [Token(TokenTypes.OP_ASSIGN)] + expr + [Token(TokenTypes.SEMICOLON)]
+    
 class LetStatement(Statement):
     '''
     LET 语句
@@ -231,8 +324,11 @@ class LetStatement(Statement):
     def expression(self)->Expression:
         return self._expression
     def tokens(self)->List[Token]: # let id = (expr);
+        expr = self._expression.tokens()
+        if expr[0].tokenType == TokenTypes.L_PAREN and expr[-1].tokenType == TokenTypes.R_PAREN:
+            expr = expr[1:-1]
         return [Token(TokenTypes.KW_LET)] + self._identifier.tokens() \
-              + [Token(TokenTypes.OP_ASSIGN)] + self._expression.tokens() + [Token(TokenTypes.SEMICOLON)]
+              + [Token(TokenTypes.OP_ASSIGN)] + expr + [Token(TokenTypes.SEMICOLON)]
 
 class ReturnStatement(Statement):
     '''
@@ -246,4 +342,60 @@ class ReturnStatement(Statement):
     def expression(self)->Expression:
         return self._expression
     def tokens(self)->List[Token]: # return (expr);
-        return [Token(TokenTypes.KW_RETURN)] + self._expression.tokens() + [Token(TokenTypes.SEMICOLON)]
+        expr = self._expression.tokens()
+        if expr[0].tokenType == TokenTypes.L_PAREN and expr[-1].tokenType == TokenTypes.R_PAREN:
+            expr = expr[1:-1]
+        return [Token(TokenTypes.KW_RETURN)] + expr + [Token(TokenTypes.SEMICOLON)]
+    
+class IfStatement(Statement):
+    '''
+    IF 语句 if (expt) {block} [else {block}]
+    else 可选
+    '''
+    def __init__(self, condition:Expression, consequence:Block, alternative:Block) -> None:
+        super().__init__()
+        self._condition = condition
+        self._consequence = consequence
+        self._alternative = alternative
+    def statementType(self)->StatementType:
+        return StatementTypes.IF
+    def condition(self)->Expression:
+        return self._condition
+    def consequence(self)->Block:
+        return self._consequence
+    def alternative(self)->Block:
+        return self._alternative
+    def tokens(self)->List[Token]: # if (expr) {block} else {block}
+        cond = self.condition().tokens()
+        if cond[0].tokenType == TokenTypes.L_PAREN and cond[-1].tokenType == TokenTypes.R_PAREN:
+            cond = cond[1:-1]
+
+        ts = [Token(TokenTypes.KW_IF), Token(TokenTypes.L_PAREN)] # if(
+        ts.extend(cond) # expr
+        ts.append(Token(TokenTypes.R_PAREN)) # )
+        ts.extend(self.consequence().tokens()) # block
+        ts.append(Token(TokenTypes.KW_ELSE)) # else
+        ts.extend(self.alternative().tokens()) # block
+        return ts
+
+class WhileStatement(Statement):
+    def __init__(self, condition:Expression, body:Block) -> None:
+        super().__init__()
+        self._condition = condition
+        self._body = body
+    def statementType(self)->StatementType:
+        return StatementTypes.WHILE
+    def condition(self)->Expression:
+        return self._condition
+    def body(self)->Block:
+        return self._body
+    def tokens(self)->List[Token]: # while (expr) {block}
+        cond = self.condition().tokens()
+        if cond[0].tokenType == TokenTypes.L_PAREN and cond[-1].tokenType == TokenTypes.R_PAREN:
+            cond = cond[1:-1]
+
+        ts = [Token(TokenTypes.KW_WHILE), Token(TokenTypes.L_PAREN)] # while(
+        ts.extend(cond) # expr
+        ts.append(Token(TokenTypes.R_PAREN)) # )
+        ts.extend(self.body().tokens()) # block
+        return ts
