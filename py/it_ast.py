@@ -11,13 +11,14 @@ EmptyStatement 空语句，单个分号
 ExpressionStatement 表达式语句。"x+10;" 是一个合法的语句
 
 Expression 表达式节点 表达式类型 ExpressionType 及其枚举 ExpressionTypes
-PrefixExpression 前缀表达式，有前缀运算符加上表达式组成
+PrefixExpression 前缀表达式，前缀运算符加上表达式组成
 BinaryOperatorExpression 二元运算表达式，由左右表达式和二元运算符组成
 IdentifierNode 标识符节点，表达式的一种，但是也可以当作左值
+BoolLiteral 布尔字面量
 IntegerLiteral 整数字面量
 '''
 from it_token import Token, TokenTypes, TokenType
-from typing import List, Optional
+from typing import List
 import functools
 
 class Node:
@@ -79,7 +80,8 @@ class ExpressionTypes:
     表达式类型枚举
     '''
     IDENTIFIER = ExpressionType("IDENTIFIER") # 标识符表达式
-    LITERAL = ExpressionType("LITERAL") # 字面量表达式
+    INTEGER_LITERAL = ExpressionType("LITERAL") # 字面量表达式
+    BOOL_LITERAL = ExpressionType("LITERAL") # 字面量表达式
     PREFIX = ExpressionType("PREFIX") # 前缀表达式
     BINARY = ExpressionType("BINARY") # 二元运算表达式
 
@@ -119,7 +121,7 @@ class PrefixExpression(Expression):
     def expressionType(self)->ExpressionType:
         return ExpressionTypes.PREFIX
     def tokens(self)->List[Token]:
-        return [self.prefixToken] + self.tokens()
+        return [Token(TokenTypes.L_PAREN)] + [self.prefixToken] + self.rawExpression().tokens() + [Token(TokenTypes.R_PAREN)] 
     
 
 class IdentifierNode(Expression):
@@ -146,7 +148,23 @@ class IntegerLiteral(Expression):
     def integerValue(self)->int:
         return int(self.token.literal)
     def expressionType(self)->ExpressionType:
-        return ExpressionTypes.LITERAL
+        return ExpressionTypes.INTEGER_LITERAL
+    def tokens(self)->List[Token]:
+        return [self.token]
+
+class BoolLiteral(Expression):
+    '''
+    布尔字面量
+    '''
+    def __init__(self, token:Token) -> None:
+        super().__init__()
+        if token.tokenType != TokenTypes.KW_TRUE and token.tokenType != TokenTypes.KW_FALSE:
+            raise Exception(f"{token} is not boolean")
+        self.token = token
+    def boolValue(self)->int:
+        return self.token.tokenType == TokenTypes.KW_TRUE
+    def expressionType(self)->ExpressionType:
+        return ExpressionTypes.BOOL_LITERAL
     def tokens(self)->List[Token]:
         return [self.token]
 

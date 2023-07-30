@@ -4,14 +4,16 @@
 from it_token import TokenType, TokenTypes
 
 
-class Precidence:
+class Prority:
     '''
     优先级
     '''
     LOWEST = 0 # 最低优先级
     @staticmethod
     def of(tokenType:TokenType)->int:
-        if tokenType == TokenTypes.OP_EQ:
+        if tokenType == TokenTypes.R_PAREN:
+            return Prority.LOWEST
+        elif tokenType == TokenTypes.OP_EQ:
             return 1
         elif tokenType == TokenTypes.OP_LT:
             return 2
@@ -29,4 +31,4 @@ class Precidence:
             return 4
         elif tokenType == TokenTypes.OP_SLASH:
             return 4
-        raise
+        raise Exception(f"unexcept token type {tokenType}")
