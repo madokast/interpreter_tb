@@ -28,6 +28,8 @@ def REPL()->None:
             continue
         evaluator.eval(ast)
         print(evaluator.result, evaluator.env)
+        if evaluator.returnMode:
+            break
 
 def help()->None:
     print("interpreter_tb https://github.com/madokast/interpreter_tb")

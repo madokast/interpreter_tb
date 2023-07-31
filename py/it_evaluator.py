@@ -68,7 +68,7 @@ class Evaluator:
             self.env.put(letState.identifier().name(), self.result)
         elif nodeType == NodeTypes.RETURN_STATEMENT: # return
             self.eval(node.treatAs(ReturnStatement).expression())
-            self.returnMode = True
+            self.returnMode = True # 进入返回模式
         elif nodeType == NodeTypes.EXPRESSION_STATEMENT: # 表达式
             self.eval(node.treatAs(ExpressionStatement).expression())
         elif nodeType == NodeTypes.IF_STATEMENT:
@@ -85,11 +85,13 @@ class Evaluator:
                 if not self.result.treatAs(BoolObject).value():
                     break
                 self.eval(whileState.body())
-        elif nodeType == NodeTypes.BLOCK_STATEMENT: # 代码块，遇到 return 停止
+                if self.returnMode: # 循环体需要检查 return 标识，否则空转
+                    break
+        elif nodeType == NodeTypes.BLOCK_STATEMENT: # 代码块，注意检查 return 标识
             for statement in node.treatAs(Block).statements():
-                self.eval(statement)
                 if self.returnMode:
                     break
+                self.eval(statement)
         # expression
         elif nodeType == NodeTypes.IDENTIFIER_EXPRESSION: # 标识符
             name = node.treatAs(IdentifierNode).name()
@@ -178,3 +180,5 @@ if __name__ == "__main__":
     _eval("fn(a, b) {return a*10+b;} (5,6);")
     _eval("let a = 5; fn(b) {return a*10+b;} (6);")
     _eval("let a = 5; let f5 = fn(b) {return a*10+b;}; let b = 7; let f7 = fn(d, f) {return b*100 + f(d);}; f7(6, f5);")
+    _eval("while(true){return 123;}return 321;")
+    _eval("let i = 0; while(true) {i=i+1; if (i==100){return i;}}")
