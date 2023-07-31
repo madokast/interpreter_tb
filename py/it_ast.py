@@ -25,85 +25,55 @@ FuncLiteral 函数字面量 fn(Identifier...){block}
 FuncCaller 函数调用，包括普通的 id(expr...) 和立即函数 FuncLiteral(expr...)
 '''
 from it_token import Token, TokenTypes, TokenType
-from typing import List, Union
+from typing import List, Union, TypeVar, Type
 import functools
 
+class NodeType(str):
+    pass
+
+class NodeTypes:
+    EMPTY_STATEMENT = NodeType("EMPTY-STATEMENT")
+    ASSIGN_STATEMENT = NodeType("ASSIGN-STATEMENT")
+    LET_STATEMENT = NodeType("LET-STATEMENT")
+    RETURN_STATEMENT = NodeType("RETURN-STATEMENT")
+    EXPRESSION_STATEMENT = NodeType("EXPRESSION-STATEMENT")
+    IF_STATEMENT = NodeType("IF-STATEMENT")
+    WHILE_STATEMENT = NodeType("WHILE-STATEMENT")
+    BLOCK_STATEMENT = NodeType("BLOCK-STATEMENT")
+
+    IDENTIFIER_EXPRESSION = NodeType("IDENTIFIER-EXPRESSION") # 标识符表达式
+    INTEGER_LITERAL_EXPRESSION = NodeType("INTEGER-LITERAL-EXPRESSION") # 字面量表达式
+    BOOL_LITERAL_EXPRESSION = NodeType("BOOL-LITERAL-EXPRESSION") # 字面量表达式
+    FUNC_LITERAL_EXPRESSION = NodeType("FUNC-LITERAL-EXPRESSION") # 函数字面量表达式
+    PREFIX_EXPRESSION = NodeType("PREFIX-EXPRESSION") # 前缀表达式
+    BINARY_EXPRESSION = NodeType("BINARY-EXPRESSION") # 二元运算表达式
+    FUNC_CALLER_EXPRESSION = NodeType("FUNC-CALLER-EXPRESSION") # 函数调用表达式
+
 class Node:
+    T = TypeVar("T")
     '''
     AST 所有的节点抽象
     '''
     def tokens(self)->List[Token]:
         raise NotImplemented
+    def nodeType(self)->NodeType:
+        raise NotImplemented
     def __str__(self) -> str:
         return " ".join((t.__repr__() for t in self.tokens()))
     def __repr__(self) -> str:
         return str(self)
+    def treatAs(self, hint:Type[T])->T: # ide-friendly
+        if isinstance(self, hint):
+            return self
+        else:
+            raise Exception(f"{self} is not a {hint.__name__}")
 
-class StatementType(str):
-    '''
-    语句类型
-    '''
-    pass
-
-class StatementTypes:
-    '''
-    语句类型枚举
-    '''
-    EMPTY = StatementType("EMPTY")
-    ASSIGN = StatementType("ASSIGN")
-    LET = StatementType("LET")
-    RETURN = StatementType("RETURN")
-    EXPRESSION = StatementType("EXPRESSION")
-    IF = StatementType("IF")
-    WHILE = StatementType("WHILE")
-    BLOCK = StatementType("BLOCK")
 
 class Statement(Node):
-    '''
-    所有语句节点的抽象
-    '''
-    def statementType(self)->StatementType:
-        raise NotImplemented
-    def asLetStatement(self)->'LetStatement':
-        if isinstance(self, LetStatement):
-            return self
-        else:
-            raise Exception(f"{self} is not LetStatement")
-    def asReturnStatement(self)->'ReturnStatement':
-        if isinstance(self, ReturnStatement):
-            return self
-        else:
-            raise Exception(f"{self} is not ReturnStatement")
-    def asExpression(self)->'Expression':
-        if isinstance(self, Expression):
-            return self
-        else:
-            raise Exception(f"{self} is not Expression")
-
-class ExpressionType(str):
-    '''
-    表达式类型
-    '''
     pass
 
-class ExpressionTypes:
-    '''
-    表达式类型枚举
-    '''
-    IDENTIFIER = ExpressionType("IDENTIFIER") # 标识符表达式
-    INTEGER_LITERAL = ExpressionType("INTEGER_LITERAL") # 字面量表达式
-    BOOL_LITERAL = ExpressionType("BOOL_LITERAL") # 字面量表达式
-    FUNC_LITERAL = ExpressionType("FUNC_LITERAL") # 函数字面量表达式
-    PREFIX = ExpressionType("PREFIX") # 前缀表达式
-    BINARY = ExpressionType("BINARY") # 二元运算表达式
-    FUNC_CALLER = ExpressionType("FUNC_CALLER") # 函数调用表达式
-
 class Expression(Node):
-    '''
-    所有表达式节点的抽象，表达式也是一个语句
-    '''
-    def expressionType(self)->ExpressionType:
-        raise NotImplemented
+    pass
 
 class Block(Statement):
     '''
@@ -112,8 +82,8 @@ class Block(Statement):
     def __init__(self) -> None:
         super().__init__()
         self._statements:List[Statement] = []
-    def statementType(self)->StatementType:
-        return StatementTypes.BLOCK
+    def nodeType(self)->NodeType:
+        return NodeTypes.BLOCK_STATEMENT
     def addStatement(self, s:Statement)->None:
         self._statements.append(s)
     def statements(self)->List[Statement]:
@@ -144,8 +114,8 @@ class PrefixExpression(Expression):
         return self.prefixToken.tokenType
     def rawExpression(self)->Expression:
         return self._expression
-    def expressionType(self)->ExpressionType:
-        return ExpressionTypes.PREFIX
+    def nodeType(self)->NodeType:
+        return NodeTypes.PREFIX_EXPRESSION
     def tokens(self)->List[Token]:
         return [Token(TokenTypes.L_PAREN)] + [self.prefixToken] + self.rawExpression().tokens() + [Token(TokenTypes.R_PAREN)] 
     
@@ -159,8 +129,8 @@ class IdentifierNode(Expression):
         super().__init__()
     def name(self)->str:
         return self.token.literal
-    def expressionType(self)->ExpressionType:
-        return ExpressionTypes.IDENTIFIER
+    def nodeType(self)->NodeType:
+        return NodeTypes.IDENTIFIER_EXPRESSION
     def tokens(self)->List[Token]:
         return [self.token]
 
@@ -173,8 +143,8 @@ class IntegerLiteral(Expression):
         self.token = token.checkTokenType(TokenTypes.INTEGER)
     def integerValue(self)->int:
         return int(self.token.literal)
-    def expressionType(self)->ExpressionType:
-        return ExpressionTypes.INTEGER_LITERAL
+    def nodeType(self)->NodeType:
+        return NodeTypes.INTEGER_LITERAL_EXPRESSION
     def tokens(self)->List[Token]:
         return [self.token]
 
@@ -187,10 +157,10 @@ class BoolLiteral(Expression):
         if token.tokenType != TokenTypes.KW_TRUE and token.tokenType != TokenTypes.KW_FALSE:
             raise Exception(f"{token} is not boolean")
         self.token = token
-    def boolValue(self)->int:
+    def boolValue(self)->bool:
         return self.token.tokenType == TokenTypes.KW_TRUE
-    def expressionType(self)->ExpressionType:
-        return ExpressionTypes.BOOL_LITERAL
+    def nodeType(self)->NodeType:
+        return NodeTypes.BOOL_LITERAL_EXPRESSION
     def tokens(self)->List[Token]:
         return [self.token]
     
@@ -202,8 +172,8 @@ class FuncLiteral(Expression):
         super().__init__()
         self._parameters = identifiers
         self._body = body
-    def expressionType(self)->ExpressionType:
-        return ExpressionTypes.FUNC_LITERAL
+    def nodeType(self)->NodeType:
+        return NodeTypes.FUNC_LITERAL_EXPRESSION
     def parameters(self)->List[IdentifierNode]:
         return self._parameters
     def body(self)->Block:
@@ -230,8 +200,8 @@ class FuncCaller(Expression):
         return self._callee
     def arguments(self)->List[Expression]:
         return self._arguments
-    def expressionType(self)->ExpressionType:
-        return ExpressionTypes.FUNC_CALLER
+    def nodeType(self)->NodeType:
+        return NodeTypes.FUNC_CALLER_EXPRESSION
     def tokens(self)->List[Token]:
         ts = self.callee().tokens()
         ts.append(Token(TokenTypes.L_PAREN)) # (
@@ -256,8 +226,8 @@ class BinaryOperatorExpression(Expression):
         return self._right
     def operator(self)->Token:
         return self._operator
-    def expressionType(self)->ExpressionType:
-        return ExpressionTypes.BINARY
+    def nodeType(self)->NodeType:
+        return NodeTypes.BINARY_EXPRESSION
     def tokens(self)->List[Token]:
         return [Token(TokenTypes.L_PAREN)] +  self.left().tokens() + [self.operator()] + self.right().tokens() + [Token(TokenTypes.R_PAREN)]
 
@@ -267,8 +237,8 @@ class EmptyStatement(Statement):
     '''
     def __init__(self) -> None:
         super().__init__()
-    def statementType(self)->StatementType:
-        return StatementTypes.EMPTY
+    def nodeType(self)->NodeType:
+        return NodeTypes.EMPTY_STATEMENT
     def tokens(self)->List[Token]: # ;
         return [Token(TokenTypes.SEMICOLON)]
 
@@ -281,8 +251,8 @@ class ExpressionStatement(Statement):
         self._expression = expression
     def expression(self)->Expression:
         return self._expression
-    def statementType(self)->StatementType:
-        return StatementTypes.EXPRESSION
+    def nodeType(self)->NodeType:
+        return NodeTypes.EXPRESSION_STATEMENT
     def tokens(self)->List[Token]: # let id = (expr);
         expr = self._expression.tokens()
         if expr[0].tokenType == TokenTypes.L_PAREN and expr[-1].tokenType == TokenTypes.R_PAREN:
@@ -297,8 +267,8 @@ class AssignStatement(Statement):
         super().__init__()
         self._identifier = identifier
         self._expression = expression
-    def statementType(self)->StatementType:
-        return StatementTypes.ASSIGN
+    def nodeType(self)->NodeType:
+        return NodeTypes.ASSIGN_STATEMENT
     def identifier(self)->IdentifierNode:
         return self._identifier
     def expression(self)->Expression:
@@ -317,8 +287,8 @@ class LetStatement(Statement):
         super().__init__()
         self._identifier = identifier
         self._expression = expression
-    def statementType(self)->StatementType:
-        return StatementTypes.LET
+    def nodeType(self)->NodeType:
+        return NodeTypes.LET_STATEMENT
     def identifier(self)->IdentifierNode:
         return self._identifier
     def expression(self)->Expression:
@@ -337,8 +307,8 @@ class ReturnStatement(Statement):
     def __init__(self, expression:Expression) -> None:
         super().__init__()
         self._expression = expression
-    def statementType(self)->StatementType:
-        return StatementTypes.RETURN
+    def nodeType(self)->NodeType:
+        return NodeTypes.RETURN_STATEMENT
     def expression(self)->Expression:
         return self._expression
     def tokens(self)->List[Token]: # return (expr);
@@ -357,8 +327,8 @@ class IfStatement(Statement):
         self._condition = condition
         self._consequence = consequence
         self._alternative = alternative
-    def statementType(self)->StatementType:
-        return StatementTypes.IF
+    def nodeType(self)->NodeType:
+        return NodeTypes.IF_STATEMENT
     def condition(self)->Expression:
         return self._condition
     def consequence(self)->Block:
@@ -383,8 +353,8 @@ class WhileStatement(Statement):
         super().__init__()
         self._condition = condition
         self._body = body
-    def statementType(self)->StatementType:
-        return StatementTypes.WHILE
+    def nodeType(self)->NodeType:
+        return NodeTypes.WHILE_STATEMENT
     def condition(self)->Expression:
         return self._condition
     def body(self)->Block:
@@ -399,3 +369,12 @@ class WhileStatement(Statement):
         ts.append(Token(TokenTypes.R_PAREN)) # )
         ts.extend(self.body().tokens()) # block
         return ts
+    
+if __name__ == "__main__":
+    node:Node = IntegerLiteral(Token(TokenTypes.INTEGER, "123"))
+    print(node, node.treatAs(IntegerLiteral).integerValue())
+
+    try:
+        node.treatAs(WhileStatement)
+    except Exception as e:
+        print(e)

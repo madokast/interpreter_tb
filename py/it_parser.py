@@ -182,7 +182,7 @@ class Parser:
 
 if __name__ == "__main__":
     import io
-    def parse(code:str)->None:
+    def _parse(code:str)->None:
         print(f"\n>>> {code}")
         sr = SourceReader(io.BytesIO(code.encode("ascii")))
         tn = Tokenizer(sr)
@@ -191,31 +191,31 @@ if __name__ == "__main__":
         print(program)
         if len(program.statements()) > 1:
             for s in program.statements():
-                print(s.statementType(), s.tokens())
+                print(s.nodeType(), s.tokens())
 
-    parse("let a = 5; let b = 838383; let c = a;")
-    parse("return a; return 838383;")
-    parse("a; 838383; ;; ")
-    parse("1;")
-    parse("1+2;")
-    parse("1+2+3;")
-    parse("1+2*3;")
-    parse("1+2*3+4;")
-    parse("a+233==356+ccc;")
-    parse("!true + false;")
-    parse("let a = 3 < 5 == true;")
-    parse("let a = (-1+-2)*(-5/(-6--7));")
-    parse("{}{let a=1;let b=a;}{}")
-    parse("if(true){;}")
-    parse("if(a>b){return 1+2-3;}else{1+2*3;}")
-    parse("fn(a, b) {return a + b;};")
-    parse("let add = fn(a, b) {return a + b;};")
-    parse("fn(a, b) {return a + b;} (1, 2);")
-    parse("return 123 + a * fn(a, b) {return a + b;} (1, 1+2/3);")
-    parse("return 123 + a * fn(a, b) {return a + b;} (fn(){return 1;}(), 1+2/3);")
-    parse("let result = adder(1, 2);")
-    parse("return 123 + a * fn(a, b) {return a + b;} (fn(){return 1;}(), adder(3, 4));")
-    parse("let a = 0; while (a<100) {a=a+1;} return a;")
+    _parse("let a = 5; let b = 838383; let c = a;")
+    _parse("return a; return 838383;")
+    _parse("a; 838383; ;; ")
+    _parse("1;")
+    _parse("1+2;")
+    _parse("1+2+3;")
+    _parse("1+2*3;")
+    _parse("1+2*3+4;")
+    _parse("a+233==356+ccc;")
+    _parse("!true + false;")
+    _parse("let a = 3 < 5 == true;")
+    _parse("let a = (-1+-2)*(-5/(-6--7));")
+    _parse("{}{let a=1;let b=a;}{}")
+    _parse("if(true){;}")
+    _parse("if(a>b){return 1+2-3;}else{1+2*3;}")
+    _parse("fn(a, b) {return a + b;};")
+    _parse("let add = fn(a, b) {return a + b;};")
+    _parse("fn(a, b) {return a + b;} (1, 2);")
+    _parse("return 123 + a * fn(a, b) {return a + b;} (1, 1+2/3);")
+    _parse("return 123 + a * fn(a, b) {return a + b;} (fn(){return 1;}(), 1+2/3);")
+    _parse("let result = adder(1, 2);")
+    _parse("return 123 + a * fn(a, b) {return a + b;} (fn(){return 1;}(), adder(3, 4));")
+    _parse("let a = 0; while (a<100) {a=a+1;} return a;")
     
     
 
