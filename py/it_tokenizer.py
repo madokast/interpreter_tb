@@ -59,7 +59,7 @@ class SourceReader:
         word = str(fisrt)
         while True:
             c = self.read()
-            if tokenizer.isLetter(c):
+            if tokenizer.isLetter(c) or tokenizer.isDigit(c):
                 word += str(c)
             else:
                 self.unread(c)

@@ -176,6 +176,8 @@ class FuncLiteral(Expression):
         return NodeTypes.FUNC_LITERAL_EXPRESSION
     def parameters(self)->List[IdentifierNode]:
         return self._parameters
+    def parameterNames(self)->List[str]:
+        return [id.name() for id in self._parameters]
     def body(self)->Block:
         return self._body
     def tokens(self)->List[Token]:
@@ -226,6 +228,8 @@ class BinaryOperatorExpression(Expression):
         return self._right
     def operator(self)->Token:
         return self._operator
+    def operatorType(self)->TokenType:
+        return self._operator.tokenType
     def nodeType(self)->NodeType:
         return NodeTypes.BINARY_EXPRESSION
     def tokens(self)->List[Token]:

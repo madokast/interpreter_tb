@@ -21,6 +21,8 @@ class Priority:
             return Priority.LOWEST
         elif tokenType == TokenTypes.OP_EQ:
             return 1
+        elif tokenType == TokenTypes.OP_NEQ:
+            return 1
         elif tokenType == TokenTypes.OP_LT:
             return 2
         elif tokenType == TokenTypes.OP_LTE:
