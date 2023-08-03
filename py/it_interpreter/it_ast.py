@@ -24,7 +24,7 @@ IntegerLiteral 整数字面量
 FuncLiteral 函数字面量 fn(Identifier...){block}
 FuncCaller 函数调用，包括普通的 id(expr...) 和立即函数 FuncLiteral(expr...)
 '''
-from it_token import Token, TokenTypes, TokenType
+from it_interpreter.it_token import Token, TokenTypes, TokenType
 from typing import List, Union, TypeVar, Type
 import functools
 
@@ -40,6 +40,7 @@ class NodeTypes:
     IF_STATEMENT = NodeType("IF-STATEMENT")
     WHILE_STATEMENT = NodeType("WHILE-STATEMENT")
     BLOCK_STATEMENT = NodeType("BLOCK-STATEMENT")
+    PROGRAM_STATEMENT = NodeType("PROGRAM_STATEMENT")
 
     IDENTIFIER_EXPRESSION = NodeType("IDENTIFIER-EXPRESSION") # 标识符表达式
     INTEGER_LITERAL_EXPRESSION = NodeType("INTEGER-LITERAL-EXPRESSION") # 字面量表达式
@@ -100,6 +101,8 @@ class Program(Block):
         self._statements.extend(block.statements())
     def tokens(self)->List[Token]:
         return functools.reduce(lambda a,b:a+b, (s.tokens() for s in self.statements()),[])
+    def nodeType(self)->NodeType:
+        return NodeTypes.PROGRAM_STATEMENT
 
 
 class PrefixExpression(Expression):

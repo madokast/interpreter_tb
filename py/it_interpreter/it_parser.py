@@ -3,10 +3,10 @@ parser 语法分析
 Syntax analysis (also known as parsing) involves parsing the token sequence to identify the syntactic structure of the program.
 词法分析，或 parsing，将 token 序列转为语法结构
 '''
-from it_tokenizer import Tokenizer, SourceReader
-from it_token import Token, TokenTypes
-from it_ast import *
-from it_prority import Priority
+from it_interpreter.it_tokenizer import Tokenizer, SourceReader
+from it_interpreter.it_token import Token, TokenTypes
+from it_interpreter.it_ast import *
+from it_interpreter.it_prority import Priority
 from typing import Union, List
 from queue import Queue
 import io

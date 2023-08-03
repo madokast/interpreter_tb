@@ -2,7 +2,7 @@
 词法解析器，将原代码解析为词法单元 token 序列
 '''
 
-from it_token import TokenType, TokenTypes, Token, KeywordMap
+from it_interpreter.it_token import TokenType, TokenTypes, Token, KeywordMap
 import io
 from queue import Queue
 from typing import Dict, List

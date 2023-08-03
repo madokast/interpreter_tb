@@ -2,9 +2,9 @@
 evaluator 解释器，解释 AST 树
 '''
 
-from it_ast import *
-from it_object import *
-from it_parser import parser
+from it_interpreter.it_ast import *
+from it_interpreter.it_object import *
+from it_interpreter.it_parser import parser
 from typing import Dict, List
 import io
 
@@ -96,6 +96,11 @@ class Evaluator:
                     break
                 self.eval(statement)
             self.env.stackPop()
+        elif nodeType == NodeTypes.PROGRAM_STATEMENT: # 程序，注意和代码块的区别，进入代码块需要前后环境变更
+            for statement in node.treatAs(Block).statements():
+                if self.returnMode:
+                    break
+                self.eval(statement)
         # expression
         elif nodeType == NodeTypes.IDENTIFIER_EXPRESSION: # 标识符
             name = node.treatAs(IdentifierNode).name()

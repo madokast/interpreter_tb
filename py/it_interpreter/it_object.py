@@ -5,8 +5,8 @@ BoolObject 布尔对象
 NullObject 空对象，出现在非表达式求值时
 '''
 
-from it_token import TokenTypes, TokenType
-from it_ast import Block
+from it_interpreter.it_token import TokenTypes, TokenType
+from it_interpreter.it_ast import Block
 from typing import Any, TypeVar, Type, List
 
 class ObjectType(str):
