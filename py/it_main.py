@@ -56,6 +56,6 @@ if __name__ == "__main__":
             ast = it_parser.parser.parse(io.BytesIO(code.encode("ascii")))
             evaluator = it_evaluator.Evaluator()
             evaluator.eval(ast)
-            print(evaluator.result, time.time() - start)
+            print(time.time() - start)
 
 

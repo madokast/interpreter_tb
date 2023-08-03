@@ -48,10 +48,12 @@ class Enviroment:
         return str(self.stack)
 
 class Evaluator:
+    BUILDIN_FUNC_PRINTIN = "println"
     def __init__(self) -> None:
         self.env = Enviroment()
         self.returnMode:bool = False
         self.result:Object = NullObject()
+        self._init()
     def eval(self, node:Node) -> None:
         # switch node type
         nodeType = node.nodeType()
@@ -87,11 +89,13 @@ class Evaluator:
                 self.eval(whileState.body())
                 if self.returnMode: # 循环体需要检查 return 标识，否则空转
                     break
-        elif nodeType == NodeTypes.BLOCK_STATEMENT: # 代码块，注意检查 return 标识
+        elif nodeType == NodeTypes.BLOCK_STATEMENT: # 代码块，注意检查 return 标识，注意进入前后环境变更
+            self.env.stackPush()
             for statement in node.treatAs(Block).statements():
                 if self.returnMode:
                     break
                 self.eval(statement)
+            self.env.stackPop()
         # expression
         elif nodeType == NodeTypes.IDENTIFIER_EXPRESSION: # 标识符
             name = node.treatAs(IdentifierNode).name()
@@ -122,12 +126,18 @@ class Evaluator:
             for i in range(len(funcObj.parameters())): # 准备实参
                 self.eval(callerExpr.arguments()[i])
                 self.env.put(funcObj.parameters()[i], self.result)
+                # 对于内置函数 println 处理
+                if isinstance(callerExpr.callee(), IdentifierNode) and callerExpr.callee().treatAs(IdentifierNode).name() == Evaluator.BUILDIN_FUNC_PRINTIN:
+                    print(self.result)
             self.eval(funcObj.body()) # 计算函数体
             self.env.stackPop() # 退栈
             self.returnMode = False # 退出返回模式
         else:
             raise Exception(f"unknown node {node} type {nodeType}")
-            
+    def _init(self) -> None:
+        # 加入内置函数 println(a)
+        if True:
+            self.env.put(Evaluator.BUILDIN_FUNC_PRINTIN, FuncObject(["obj"], Block()))
 
 if __name__ == "__main__":
     def _eval(code:str) -> None:
@@ -182,3 +192,4 @@ if __name__ == "__main__":
     _eval("let a = 5; let f5 = fn(b) {return a*10+b;}; let b = 7; let f7 = fn(d, f) {return b*100 + f(d);}; f7(6, f5);")
     _eval("while(true){return 123;}return 321;")
     _eval("let i = 0; while(true) {i=i+1; if (i==100){return i;}}")
+    _eval("println(123);")
