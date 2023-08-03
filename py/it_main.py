@@ -41,17 +41,19 @@ if __name__ == "__main__":
 
     def help()->None:
         print("interpreter_tb https://github.com/madokast/interpreter_tb")
-        print("/         REPL")
         print("-h        help")
+        print("-r        REPL")
         print("-f [file] execute file")
         print("-c [code] execute code")
 
 
     argv = sys.argv
     if len(argv) == 1:
-        REPL()
+        help()
     elif len(argv) == 3:
-        if (argv[1] == '-f'):
+        if (argv[1] == '-r'):
+            REPL()
+        elif (argv[1] == '-f'):
             with open(argv[2], encoding="utf-8") as f:
                 run(io.BytesIO(f.read().encode("ascii")))
         elif (argv[1] == '-c'):
