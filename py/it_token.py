@@ -1,3 +1,7 @@
+'''
+定义词法单元及其类型
+'''
+
 from typing import Dict
 
 class TokenType(str):

@@ -1,5 +1,6 @@
 '''
 二元运算符优先级
+在生成 AST 时使用到
 '''
 from it_token import TokenType, TokenTypes
 

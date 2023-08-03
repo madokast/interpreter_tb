@@ -1,5 +1,5 @@
 '''
-语言的对象系统
+语言的对象系统，仅在 AST 解释器中使用
 IntegerObject 整形对象
 BoolObject 布尔对象
 NullObject 空对象，出现在非表达式求值时

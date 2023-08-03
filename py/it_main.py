@@ -31,6 +31,13 @@ def REPL()->None:
         if evaluator.returnMode:
             break
 
+def run(code:io.IOBase)->None:
+    start = time.time()
+    ast = it_parser.parser.parse(code)
+    it_evaluator.Evaluator().eval(ast)
+    print("runtime" ,time.time() - start)
+
+
 def help()->None:
     print("interpreter_tb https://github.com/madokast/interpreter_tb")
     print("/         REPL")
@@ -43,19 +50,15 @@ if __name__ == "__main__":
     argv = sys.argv
     if len(argv) == 1:
         REPL()
-    elif len(argv) == 2:
-        help()
     elif len(argv) == 3:
         if (argv[1] == '-f'):
             with open(argv[2], encoding="utf-8") as f:
-                print(f.read())
+                run(io.BytesIO(f.read().encode("ascii")))
         elif (argv[1] == '-c'):
-            code = argv[2]
-            start = time.time()
-            tokens = it_tokenizer.tokenizer.tokenize(io.BytesIO(code.encode("ascii")))
-            ast = it_parser.parser.parse(io.BytesIO(code.encode("ascii")))
-            evaluator = it_evaluator.Evaluator()
-            evaluator.eval(ast)
-            print(time.time() - start)
+            run(io.BytesIO(argv[2].encode("ascii")))
+        else:
+            help()
+    else:
+        help()
 
 

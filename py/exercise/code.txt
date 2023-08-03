@@ -1,0 +1,19 @@
+{
+    let nexts = fn(s, i) {return s+i;};
+    let nexti = fn(s, i) {return i+1;};
+    let sum = fn(s, i, stop) {
+        if (i>stop) {return s;}
+        else {return sum(nexts(s,i), nexti(s, i), stop);}
+    };
+    println(sum(0, 0, 100));
+}
+
+{
+    let s = 0;
+    let i = 0;
+    while(i<=100) {
+        s = i+s;
+        i = 1+i;
+    }
+    println(s);
+}
