@@ -3,7 +3,7 @@
 '''
 import it_interpreter.it_ast as ast # 各种表达式、语句
 from it_compiler.it_code import Bytes, ByteCode, OprationCode, OprationCodes
-from typing import List
+from it_interpreter.it_token import TokenType, TokenTypes
 
 
 class Compiler:
@@ -11,17 +11,23 @@ class Compiler:
         self.bytecode:ByteCode = ByteCode()
     def compile(self, node:ast.Node) -> None:
         nodeType = node.nodeType()
-        if nodeType == ast.NodeTypes.PROGRAM_STATEMENT:
+        if nodeType == ast.NodeTypes.PROGRAM_STATEMENT: # program
             for s in node.treatAs(ast.Program).statements():
                 self.compile(s)
-        elif nodeType == ast.NodeTypes.BLOCK_STATEMENT:
+        elif nodeType == ast.NodeTypes.BLOCK_STATEMENT: # block
             for s in node.treatAs(ast.Block).statements():
                 self.compile(s)
-        elif nodeType == ast.NodeTypes.EXPRESSION_STATEMENT:
+        elif nodeType == ast.NodeTypes.EXPRESSION_STATEMENT: # expr_state 执行完后需要弹栈
             self.compile(node.treatAs(ast.ExpressionStatement).expression())
-        elif nodeType == ast.NodeTypes.EMPTY_STATEMENT:
+            self._addInstraction(OprationCodes.POPI, Bytes())
+        elif nodeType == ast.NodeTypes.EMPTY_STATEMENT: # empty
             self._addInstraction(OprationCodes.NOOP, Bytes())
-        elif nodeType == ast.NodeTypes.INTEGER_LITERAL_EXPRESSION:
+        elif nodeType == ast.NodeTypes.BINARY_EXPRESSION:
+            biExpr = node.treatAs(ast.BinaryOperatorExpression)
+            self.compile(biExpr.left())
+            self.compile(biExpr.right())
+            self._addBinaryOpeatorInstraction(biExpr.operatorType())
+        elif nodeType == ast.NodeTypes.INTEGER_LITERAL_EXPRESSION: # int_literal_expt
             addr = self._addIntConstValue(node.treatAs(ast.IntegerLiteral).integerValue(), 4)
             self._addInstraction(OprationCodes.LOADI, Bytes().pushInt(addr, OprationCodes.LOADI.operandNumber))
         else:
@@ -33,15 +39,15 @@ class Compiler:
         addr = len(self.bytecode.constPool)
         self.bytecode.constPool.pushInt(value, byteNumber)
         return addr
-    
+    def _addBinaryOpeatorInstraction(self, tokenType:TokenType) -> None:
+        if tokenType == TokenTypes.OP_PLUS:
+            self._addInstraction(OprationCodes.ADDI, Bytes())
+        elif tokenType == TokenTypes.OP_MINUS:
+            self._addInstraction(OprationCodes.SUBI, Bytes())
+        elif tokenType == TokenTypes.OP_ASTERISK:
+            self._addInstraction(OprationCodes.MULI, Bytes())
+        elif tokenType == TokenTypes.OP_SLASH:
+            self._addInstraction(OprationCodes.DIVI, Bytes())
+        else:
+            raise Exception(f"unknown token type {tokenType}")
 
-if __name__ == "__main__":
-    from it_interpreter import it_parser
-    import io
-    def _test(code:str)->None:
-        AST = it_parser.parser.parse(io.BytesIO(code.encode("ascii")))
-        c = Compiler()
-        c.compile(AST)
-        print(code, '\n', c.bytecode, '\n')
-
-    _test(";")
