@@ -79,8 +79,18 @@ class OprationCodes:
     MULI = OprationCode(Byte(4), 0, "MULI") # 弹出栈顶的两个四字节整形元素，相乘法再入栈
     DIVI = OprationCode(Byte(5), 0, "DIVI") # 弹出栈顶的两个四字节整形元素，相除法再入栈
     POPI = OprationCode(Byte(6), 0, "POPI") # 弹出栈顶的四字节整形元素
+    PUSHBT = OprationCode(Byte(7), 0, "PUSHBT") # 将布尔值 TRUE （四字节整形 1）压入栈中
+    PUSHBF = OprationCode(Byte(8), 0, "PUSHBF") # 将布尔值 FALSE（四字节整形 0）压入栈中
+    EQI = OprationCode(Byte(9), 0, "EQI") # 弹出栈顶的两个四字节整形元素，判断相等，将结果以 1/0 入栈
+    NEQI = OprationCode(Byte(10), 0, "NEQI") # 弹出栈顶的两个四字节整形元素，判断不相等，将结果以 1/0 入栈
+    GTI = OprationCode(Byte(11), 0, "GTI") # 弹出栈顶的两个四字节整形元素，判断大于，将结果以 1/0 入栈
+    GTEI = OprationCode(Byte(12), 0, "GTEI") # 弹出栈顶的两个四字节整形元素，判断大于等于，将结果以 1/0 入栈
+    LTI = OprationCode(Byte(13), 0, "LTI") # 弹出栈顶的两个四字节整形元素，判断小于，将结果以 1/0 入栈
+    LTEI = OprationCode(Byte(14), 0, "LTEI") # 弹出栈顶的两个四字节整形元素，判断小于等于，将结果以 1/0 入栈
+    MINUSI = OprationCode(Byte(15), 0, "MINUSI") # 弹出栈顶的一个四字节整形元素，反转符号后入栈
+    BANGB = OprationCode(Byte(16), 0, "BANGB") # 弹出栈顶的一个四字节整形元素，视为 0/1 布尔，反转后入栈
 
-    _INDEXES:List[OprationCode] = [NOOP, LOADI, ADDI, SUBI, MULI, DIVI, POPI]
+    _INDEXES:List[OprationCode] = [NOOP, LOADI, ADDI, SUBI, MULI, DIVI, POPI, PUSHBT, PUSHBF, EQI, NEQI, GTI, GTEI, LTI, LTEI, MINUSI, BANGB]
     @staticmethod
     def string(address:int, bytecode:ByteCode) -> str:
         if bytecode.instrctions[address] == OprationCodes.NOOP.code:
@@ -98,6 +108,26 @@ class OprationCodes:
             return f"{OprationCodes.DIVI.mnemonic};"
         if bytecode.instrctions[address] == OprationCodes.POPI.code:
             return f"{OprationCodes.POPI.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.PUSHBT.code:
+            return f"{OprationCodes.PUSHBT.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.PUSHBF.code:
+            return f"{OprationCodes.PUSHBF.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.EQI.code:
+            return f"{OprationCodes.EQI.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.NEQI.code:
+            return f"{OprationCodes.NEQI.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.GTI.code:
+            return f"{OprationCodes.GTI.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.GTEI.code:
+            return f"{OprationCodes.GTEI.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.LTI.code:
+            return f"{OprationCodes.LTI.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.LTEI.code:
+            return f"{OprationCodes.LTEI.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.MINUSI.code:
+            return f"{OprationCodes.MINUSI.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.BANGB.code:
+            return f"{OprationCodes.BANGB.mnemonic};"
         raise Exception(f"unknow operation code {bytecode.instrctions[address]}")
 
 class Sizes:
