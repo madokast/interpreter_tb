@@ -14,6 +14,17 @@ class Compiler:
         if nodeType == ast.NodeTypes.PROGRAM_STATEMENT: # program
             for s in node.treatAs(ast.Program).statements():
                 self.compile(s)
+        elif nodeType == ast.NodeTypes.IF_STATEMENT: # if
+            ifState = node.treatAs(ast.IfStatement)
+            self.compile(ifState.condition()) # 计算条件
+            self._addInstraction(OprationCodes.JUMPF, Bytes().pushInt(-1, OprationCodes.JUMPF.operandNumber)) # JUMPF 先填充 -1，等知道跳转位置后回写
+            jumpF = self.bytecode.instrctions.size() - OprationCodes.JUMPF.operandNumber # 记录 JUMPF 回写位置
+            self.compile(ifState.consequence()) # consequence 
+            self._addInstraction(OprationCodes.JUMP, Bytes().pushInt(-1, OprationCodes.JUMP.operandNumber))# JUMP 先填充 -1，
+            jump = self.bytecode.instrctions.size() - OprationCodes.JUMP.operandNumber # 记录 JUMP 回写位置
+            self.bytecode.instrctions.replace(jumpF, Bytes().pushInt(self.bytecode.instrctions.size(), OprationCodes.JUMPF.operandNumber)) # 回写 JUMPF
+            self.compile(ifState.alternative())
+            self.bytecode.instrctions.replace(jump, Bytes().pushInt(self.bytecode.instrctions.size(), OprationCodes.JUMP.operandNumber)) # 回写
         elif nodeType == ast.NodeTypes.BLOCK_STATEMENT: # block
             for s in node.treatAs(ast.Block).statements():
                 self.compile(s)

@@ -34,10 +34,16 @@ class Bytes:
     def extend(self, bytes:Iterable[int]) -> 'Bytes':
         self.proxy.extend(bytes)
         return self
+    def replace(self, addr:int, bytes:'Bytes') -> None:
+        print(f"replace {self} {bytes}")
+        self.proxy[addr:addr+len(bytes)] = bytes.proxy
+        print(f"replace {self}")
     def __iter__(self)->Iterator[int]:
         return self.proxy.__iter__()
     def __len__(self) -> int:
         return len(self.proxy)
+    def size(self) -> int:
+        return len(self)
     def __getitem__(self, address:int) -> 'Byte':
         return self.proxy[address]
     def __str__(self) -> str:
@@ -52,7 +58,7 @@ class ByteCode:
         address = 0
         while address < len(self.instrctions):
             op = OprationCodes._INDEXES[self.instrctions[address]]
-            ss.append(OprationCodes.string(address, self))
+            ss.append(f"{address:4d} {OprationCodes.string(address, self)}")
             address += op.length
         return str(self.instrctions)+"\n"+"\n".join(ss)
 
@@ -89,8 +95,12 @@ class OprationCodes:
     LTEI = OprationCode(Byte(14), 0, "LTEI") # 弹出栈顶的两个四字节整形元素，判断小于等于，将结果以 1/0 入栈
     MINUSI = OprationCode(Byte(15), 0, "MINUSI") # 弹出栈顶的一个四字节整形元素，反转符号后入栈
     BANGB = OprationCode(Byte(16), 0, "BANGB") # 弹出栈顶的一个四字节整形元素，视为 0/1 布尔，反转后入栈
+    JUMP = OprationCode(Byte(17), 2, "JUMP") # 无条件跳转 (i<<8)+j 位置
+    JUMPF = OprationCode(Byte(18), 2, "JUMPF") # 弹出栈顶的一个四字节整形元素，判断 0/1 布尔条件，false 时跳转 (i<<8)+j 位置
 
-    _INDEXES:List[OprationCode] = [NOOP, LOADI, ADDI, SUBI, MULI, DIVI, POPI, PUSHBT, PUSHBF, EQI, NEQI, GTI, GTEI, LTI, LTEI, MINUSI, BANGB]
+
+    _INDEXES:List[OprationCode] = [NOOP, LOADI, ADDI, SUBI, MULI, DIVI, POPI, PUSHBT, PUSHBF, EQI, NEQI, GTI, GTEI, LTI, LTEI, MINUSI, BANGB, JUMP, JUMPF]
+
     @staticmethod
     def string(address:int, bytecode:ByteCode) -> str:
         if bytecode.instrctions[address] == OprationCodes.NOOP.code:
@@ -128,6 +138,12 @@ class OprationCodes:
             return f"{OprationCodes.MINUSI.mnemonic};"
         if bytecode.instrctions[address] == OprationCodes.BANGB.code:
             return f"{OprationCodes.BANGB.mnemonic};"
+        if bytecode.instrctions[address] == OprationCodes.JUMP.code:
+            target = bytecode.instrctions.readInt(address+1, OprationCodes.JUMP.operandNumber)
+            return f"{OprationCodes.JUMP.mnemonic} {target};"
+        if bytecode.instrctions[address] == OprationCodes.JUMPF.code:
+            target = bytecode.instrctions.readInt(address+1, OprationCodes.JUMPF.operandNumber)
+            return f"{OprationCodes.JUMPF.mnemonic} {target};"
         raise Exception(f"unknow operation code {bytecode.instrctions[address]}")
 
 class Sizes:
@@ -153,3 +169,9 @@ if __name__ == "__main__":
 
     bytecode.instrctions.pushByte(OprationCodes.NOOP.code)
     print(bytecode)
+
+    # replace
+    bytes = Bytes().pushByte(Byte(1)).pushByte(Byte(2)).pushByte(Byte(3)).pushByte(Byte(4))
+    print(bytes)
+    bytes.replace(1, Bytes().pushByte(Byte(10)).pushByte(Byte(20)))
+    print(bytes)

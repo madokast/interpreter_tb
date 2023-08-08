@@ -85,6 +85,18 @@ class VM:
                 raise Exception(f"BANGB cannot operate on {val}")
             self.stack.pushInt(1 - val, Sizes.I)
             self.ip += OprationCodes.BANGB.length
+        elif opCode == OprationCodes.JUMP.code:
+            addr = self.bytecode.instrctions.readInt(self.ip+1, OprationCodes.JUMP.operandNumber)
+            self.ip = addr
+        elif opCode == OprationCodes.JUMPF.code:
+            val = self.stack.popInt(Sizes.I)
+            if val != 0 and val != 1:
+                raise Exception(f"BANGB cannot operate on {val}")
+            if val == 0:
+                addr = self.bytecode.instrctions.readInt(self.ip+1, OprationCodes.JUMPF.operandNumber)
+                self.ip = addr
+            else:
+                self.ip += OprationCodes.JUMPF.length
         else:
             raise Exception(f"unknown operation code {opCode}")
     def __str__(self) -> str:

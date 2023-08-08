@@ -41,3 +41,5 @@ if __name__ == "__main__":
     _test("-3;")
     _test("!(2<=4);")
     _test("!true;")
+    _test("if (1>0) {3;} else {4;}")
+    _test("if (1<0) {3;} else {4;}")
