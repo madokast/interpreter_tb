@@ -15,6 +15,7 @@ class Compiler:
             for s in node.treatAs(ast.Program).statements():
                 self.compile(s)
         elif nodeType == ast.NodeTypes.IF_STATEMENT: # if
+            # if(a){b}else{c} 翻译为 a; JUMPF #1; b; JUMP #2; [#1] c; [#2] end; 
             ifState = node.treatAs(ast.IfStatement)
             self.compile(ifState.condition()) # 计算条件
             self._addInstraction(OprationCodes.JUMPF, Bytes().pushInt(-1, OprationCodes.JUMPF.operandNumber)) # JUMPF 先填充 -1，等知道跳转位置后回写

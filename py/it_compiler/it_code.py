@@ -58,7 +58,7 @@ class ByteCode:
         address = 0
         while address < len(self.instrctions):
             op = OprationCodes._INDEXES[self.instrctions[address]]
-            ss.append(f"{address:4d} {OprationCodes.string(address, self)}")
+            ss.append(f"{address:4d}  {OprationCodes.string(address, self)}")
             address += op.length
         return str(self.instrctions)+"\n"+"\n".join(ss)
 
